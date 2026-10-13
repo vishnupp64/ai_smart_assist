@@ -1,0 +1,104 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  forms       Form[]
+  submissions Submission[]
+
+  @@map("users")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model Form {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  slug        String     @unique
+  status      FormStatus @default(DRAFT)
+  category    String?
+  icon        String?    @default("FileText")
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  publishedAt DateTime?
+
+  createdBy   String?
+  creator     User?   @relation(fields: [createdBy], references: [id])
+
+  fields      FormField[]
+  submissions Submission[]
+
+  @@map("forms")
+}
+
+enum FormStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model FormField {
+  id           String    @id @default(cuid())
+  formId       String
+  form         Form      @relation(fields: [formId], references: [id], onDelete: Cascade)
+  name         String
+  label        String
+  type         FieldType
+  placeholder  String?
+  helpText     String?
+  required     Boolean   @default(false)
+  order        Int       @default(0)
+  options      Json?     // For select, checkbox, radio
+  validations  Json?     // Min, max, pattern, etc.
+  defaultValue String?
+
+  @@map("form_fields")
+}
+
+enum FieldType {
+  TEXT
+  EMAIL
+  TEL
+  NUMBER
+  DATE
+  TEXTAREA
+  SELECT
+  CHECKBOX
+  RADIO
+}
+
+model Submission {
+  id            String   @id @default(cuid())
+  formId        String
+  form          Form     @relation(fields: [formId], references: [id])
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id])
+  data          Json
+  completionPct Float    @default(0)
+  aiAssisted    Boolean  @default(false)
+  ipAddress     String?
+  userAgent     String?
+  createdAt     DateTime @default(now())
+
+  @@map("submissions")
+}
