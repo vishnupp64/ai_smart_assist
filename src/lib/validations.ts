@@ -49,7 +49,7 @@ export type UpdateFormInput = z.infer<typeof UpdateFormSchema>;
 // Submission schema
 export const CreateSubmissionSchema = z.object({
   formId: z.string().min(1),
-  data: z.record(z.unknown()),
+  data: z.record(z.string(), z.unknown()),
   completionPct: z.number().min(0).max(100).default(0),
   aiAssisted: z.boolean().default(false),
 });
@@ -63,7 +63,7 @@ export const AISuggestSchema = z.object({
 export const AIFollowUpSchema = z.object({
   description: z.string(),
   formId: z.string(),
-  knownValues: z.record(z.unknown()),
+  knownValues: z.record(z.string(), z.unknown()),
 });
 
 export const AIExplainSchema = z.object({
@@ -73,5 +73,5 @@ export const AIExplainSchema = z.object({
 
 export const AIReviewSchema = z.object({
   formId: z.string(),
-  answers: z.record(z.unknown()),
+  answers: z.record(z.string(), z.unknown()),
 });

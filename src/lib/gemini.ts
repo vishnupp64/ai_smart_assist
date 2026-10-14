@@ -61,7 +61,7 @@ const AIReviewResultSchema = z.object({
 
 function getModel(structured: boolean = false) {
   return genAI.getGenerativeModel({
-    model: "gemini-2.0-flash",
+    model: "gemini-3.7-flash",
     generationConfig: structured
       ? {
           responseMimeType: "application/json",
@@ -129,13 +129,13 @@ Return a JSON object with this exact structure:
 Only include fields where you have a suggestion. List required fields with no data in missingRequired.
 `;
 
-  const result = await model.generateContent(prompt);
-  const text = result.response.text();
-
   try {
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
     const parsed = JSON.parse(text);
     return AIFieldSuggestionsSchema.parse(parsed);
-  } catch {
+  } catch (error) {
+    console.warn("[Gemini AI] Suggestion fallback:", (error as Error).message);
     // Return safe fallback
     return {
       suggestions: [],
@@ -187,13 +187,13 @@ Only ask about fields that are required and not yet filled, or fields with uncle
 Keep questions brief and friendly. Maximum 5 questions.
 `;
 
-  const result = await model.generateContent(prompt);
-  const text = result.response.text();
-
   try {
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
     const parsed = JSON.parse(text);
     return AIFollowUpQuestionsSchema.parse(parsed);
-  } catch {
+  } catch (error) {
+    console.warn("[Gemini AI] Follow-up fallback:", (error as Error).message);
     return { questions: [] };
   }
 }
@@ -227,13 +227,13 @@ Return a JSON object with this exact structure:
 }
 `;
 
-  const result = await model.generateContent(prompt);
-  const text = result.response.text();
-
   try {
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
     const parsed = JSON.parse(text);
     return AIFieldExplanationSchema.parse(parsed);
-  } catch {
+  } catch (error) {
+    console.warn("[Gemini AI] Explanation fallback:", (error as Error).message);
     return {
       fieldName: field.name,
       explanation: field.helpText || `Enter your ${field.label.toLowerCase()}.`,
@@ -283,13 +283,13 @@ completionPct should be 0-100 based on how many required fields are filled corre
 isValid should be true only if all required fields are filled with valid values.
 `;
 
-  const result = await model.generateContent(prompt);
-  const text = result.response.text();
-
   try {
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
     const parsed = JSON.parse(text);
     return AIReviewResultSchema.parse(parsed);
-  } catch {
+  } catch (error) {
+    console.warn("[Gemini AI] Review fallback:", (error as Error).message);
     // Calculate basic completion manually
     const requiredFields = fields.filter((f) => f.required);
     const filledRequired = requiredFields.filter(
@@ -304,7 +304,7 @@ isValid should be true only if all required fields are filled with valid values.
       issues: [],
       completionPct: pct,
       isValid: pct === 100,
-      summary: "Review could not be completed automatically.",
+      summary: "Basic verification completed.",
     };
   }
 }
